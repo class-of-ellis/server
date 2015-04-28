@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+    
+        <title>CS Chat</title>
+    
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <!-- FONTS -->
+        <link href='http://fonts.googleapis.com/css?family=Lora' rel='stylesheet' type='text/css'>
+        
+    </head>
+    
+    <body>
+        
+        <nav id="nav">
+            
+            <h1 id="titleName">Computer Systems Chat</h1>
+            
+            <div><span id="status"></span></div>
+            
+        </nav>
+        
+        <div id="second">
+            
+            <input type="text" placeholder="Username" id="user" />
+            
+        </div>
+               
+        <ul id="messages"></ul>
+        
+        <div id="atBottom">
+            
+            <input type="text" placeholder="Type Here.." id="chatText" />
+            
+            <button type="button" onclick="send();" id="chatButt">Send!</button>
+            
+        </div>
+        
+    </body>
+    
+        <style>
+            body{
+                background-color: white;
+                margin: 0;
+                padding: 0;
+                font-family: 'Lora', serif;
+            }
+            #nav{
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 40px;
+                background-color: #36498F;
+                margin: 0;
+                padding: 0;
+            }
+            #second{
+                position: fixed;
+                width: 100%;
+                top: 40px;
+                background-color: white;  
+                padding: 4px;
+                border-bottom: solid 1px black;
+            }
+            #user{
+                float: right;
+                width: 100%;
+                max-width: 275px;
+                height: 25px;
+                margin-right: 7px;
+                font-size: 17px;
+                text-align: center;
+                border-radius: 10px;
+                border: solid 1px black;
+            }
+            #titleName{
+                margin: 0;
+                padding: 0;
+                color: white;
+                padding-left: 8px;
+                font-size: 30px;
+            }
+            #status{
+                position: fixed;
+                top: 0;
+                right: 0;
+                border-radius: 50px;
+                border: solid 1px black;
+                background-color: red;
+                padding: 12px;
+                margin: 5px;
+                margin-right: 10px;
+            }
+            #messages{
+                width: 100%;
+                padding: 0;
+                padding-top: 3px;
+                margin-top: 80px;
+                margin-bottom: 45px;
+                list-style: none;
+            }
+            #messages li{
+                font-size: 25px;
+                padding: 6px 0; 
+                padding-left: 10px;
+                border-bottom: dashed 1px black;
+            }
+            #atBottom{
+                position: fixed;
+                bottom: 0;
+                background-color: #36498F;
+                padding: 7px 0;
+                width: 100%;
+                border-radius: 25px;
+            }
+            #chatText{
+                display: inline;
+                height: 30px;
+                width: 78%;
+                margin: 0;
+                margin-left: 5px;
+                padding: 0;
+                padding-left: 10px;
+                font-size: 20px;
+                border: none;
+                border-bottom-left-radius: 25px;
+                border-top-left-radius: 25px;
+            }
+            #chatButt{
+                width: 19%;
+                border: none;
+                height: 30px;
+                margin-right: 5px;
+                background-color: white;
+                font-size: 20px;
+                border-bottom-right-radius: 25px;
+                border-top-right-radius: 25px;
+            }
+            
+            @media (max-width: 600px){
+                #user{
+                    width: 97%;
+                    max-width: none;
+                }
+            }
+            
+            @media (max-width: 700px){
+                #chatText{
+                    width: 64%;   
+                }
+                #chatButt{
+                    width: 30%;
+                }
+            }
+            
+            @media (min-width: 700px) and (max-width: 1000px){
+                #chatText{
+                    width: 68%;   
+                }
+                #chatButt{
+                    width: 28%;
+                } 
+            }
+        </style>
+    
+        <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+    
+        <script>
+            
+            try{
+                
+                $('#user').val( localStorage.getItem('user') );
+                
+            }catch(err){}
+            
+            var connected = false;
+            var socket = io();
+            var waitTime = 675;
+            
+            
+            socket.on('connect', function(){
+                
+                connected = true;
+                
+                $('#status').css('background-color', '#6AFF34');
+                
+            });
+            
+            socket.on('disconnect', function(){
+                
+                $('#status').css('background-color', 'red');
+                
+                connected = false;
+                
+            });
+            
+            socket.on('message', function(msg){
+                
+                $('#messages').append('<li>' + msg + '</li>');
+                
+            });
+            
+            var firstUp = function(someText){
+                if(typeof someText == "string"){
+                    var first = someText.substr(0, 1).toUpperCase();
+                    
+                    var all_else = someText.substr(1, (someText.length -1) ).toLowerCase();
+                    
+                    return first + all_else;
+                };
+            };
+            
+            
+            function send(){
+                
+                var chatText = $('#chatText').val();
+                var user = $('#user').val();
+                
+                if(connected === true){
+                    
+                    if(user != ""){
+                        
+                        if(chatText != ""){
+                        
+                            $('#chatText').val("");
+
+                            var final = firstUp(user) + ": " + firstUp(chatText);
+
+                            $('#messages').append('<li>' + final + '</li>');
+
+                            socket.send(final);
+                        }else if($(window).width() > 700){
+                     
+                             buttonAlert("No Text To Send");
+                        }else{
+                            
+                            buttonAlert("No Text");
+                        };
+                        
+                    }else if($(window).width() > 700){
+                        buttonAlert("No Username");
+                        
+                    }else{
+                        buttonAlert("No User"); 
+                       
+                    };
+                }else if($(window).width() > 700){
+                    
+                    buttonAlert("No Connection");
+                    
+                }else{
+                    
+                    buttonAlert("No Conn");
+                    
+                };
+            };
+            
+            function buttonAlert(mess){
+                if(mess != ""){
+                    $('#chatButt').text(mess);
+                    $('#chatButt').css('color', 'red');
+                    
+                    setTimeout(function(){
+                        
+                        $('#chatButt').text("Send!");
+                        $('#chatButt').css('color', 'black');
+                        
+                    }, waitTime);
+                };
+            };
+            
+            $('#chatText').keypress(function(e){
+             
+                if(e.which == 13){
+                
+                    send();
+                    
+                return false;  
+                }
+            });
+            
+            $('#user').keyup(function(e){
+                
+                localStorage.setItem('user', $('#user').val() );
+                
+                if(e.which === 13){
+                    $('#chatText').focus();  
+                };
+                
+            });
+            
+        </script>
+
+</html>
